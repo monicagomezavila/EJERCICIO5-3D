@@ -27,12 +27,17 @@
     </script>
 
     <script>
+
         var gl;
+        var canvas;
         var count = 0.0;
+        var intento = "perspective";
+        var projectionValue;
+        var z = -3;
 
         function init() {
             // Get canvas object from the DOM
-            var canvas = document.getElementById("myCanvas");
+            canvas = document.getElementById("myCanvas");
             // Init WebGL context
             gl = canvas.getContext("webgl");
             if (!gl) {
@@ -54,9 +59,18 @@
             // Draw Scene
             drawScene();
         }
+
+
         function drawScene() {
             var rotationChecked = document.querySelector('input[name="rotation"]:checked');
             var primitiveValue = document.querySelector('input[name="primitive"]:checked').value;
+            projectionValue = document.querySelector('input[name="projection"]:checked').value;
+
+            if (intento != projectionValue){
+              intento = projectionValue;
+              initProjection(gl, canvas);
+            }
+
             // Clear
             gl.clear(gl.COLOR_BUFFER_BIT);
             // Rotate
@@ -74,7 +88,10 @@
               count += 0.01;
             };
             requestAnimationFrame(drawScene);
+
         }
+
+
         function initVertexShader(gl) {
             // Vertexes and colors  (X, Y, Z, R, G, B)
             var vertexesAndColors = [
@@ -134,16 +151,35 @@
 
 
         function initProjection(gl, canvas) {
-            // Write u_pMatrix
-            var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
-            var ratio = canvas.width / canvas.height;
-            var pMatrix = mat4.perspective(mat4.create(), 150, ratio, 0.1, 100);
-            gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
-            // Write u_vMatrix
-            var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
-            var vMatrix = mat4.lookAt(mat4.create(), [0, 0, -3], [0, 0, 0], [0, 1, 0]);
-            gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
+
+          projectionValue = document.querySelector('input[name="projection"]:checked').value;
+          var ratio = canvas.width / canvas.height;
+
+          if (projectionValue == "perspective"){
+              // Write u_pMatrix
+              var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
+              var pMatrix = mat4.perspective(mat4.create(), 150, ratio, 0.1, 100);
+              gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
+
+          }else{
+              var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
+              var pMatrix = mat4.ortho(mat4.create(), -ratio, ratio, -1.0, 1.0, 5.0, -1.0);
+              gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
+          }
+
+          document.addEventListener('wheel', function (event) {
+              z = event.wheelDelta > 0 ? z + 1 : z - 1;
+              var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
+              var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
+              gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
+          });
+
+          // Write u_vMatrix
+          var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
+          var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
+          gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
         }
+
 
         function initShaders(gl, vs_source, fs_source) {
             // Compile shaders
@@ -159,6 +195,8 @@
             gl.useProgram(glProgram);
             gl.program = glProgram;
         }
+
+
         function makeShader(gl, src, type) {
             var shader = gl.createShader(type);
             gl.shaderSource(shader, src);
