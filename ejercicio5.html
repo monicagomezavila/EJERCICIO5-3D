@@ -169,12 +169,13 @@
 
           document.addEventListener('wheel', function (event) {
               z = event.wheelDelta > 0 ? z + 1 : z - 1;
-              var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
-              var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
-              gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
+              VMATRIX();
           });
 
-          // Write u_vMatrix
+          VMATRIX();
+        }
+
+        function VMATRIX() {
           var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
           var vMatrix = mat4.lookAt(mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
           gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
