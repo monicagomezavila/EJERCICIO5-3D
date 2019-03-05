@@ -31,9 +31,9 @@
         var gl;
         var canvas;
         var count = 0.0;
-        var intento = "perspective";
         var projectionValue;
         var z = -3;
+
 
         function init() {
             // Get canvas object from the DOM
@@ -58,6 +58,11 @@
             gl.enable(gl.DEPTH_TEST);
             // Draw Scene
             drawScene();
+            //Detecta si el ratón se mueve y llama a la función VMATRX que cambia la posición de la cámara
+            document.addEventListener('wheel', function (event) {
+                z = event.wheelDelta > 0 ? z + 1 : z - 1;
+                VMATRIX();
+            });
         }
 
 
@@ -66,10 +71,8 @@
             var primitiveValue = document.querySelector('input[name="primitive"]:checked').value;
             projectionValue = document.querySelector('input[name="projection"]:checked').value;
 
-            if (intento != projectionValue){
-              intento = projectionValue;
-              initProjection(gl, canvas);
-            }
+
+            initProjection(gl, canvas);
 
             // Clear
             gl.clear(gl.COLOR_BUFFER_BIT);
@@ -88,7 +91,6 @@
               count += 0.01;
             };
             requestAnimationFrame(drawScene);
-
         }
 
 
@@ -151,8 +153,7 @@
 
 
         function initProjection(gl, canvas) {
-
-          projectionValue = document.querySelector('input[name="projection"]:checked').value;
+          
           var ratio = canvas.width / canvas.height;
 
           if (projectionValue == "perspective"){
@@ -160,20 +161,14 @@
               var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
               var pMatrix = mat4.perspective(mat4.create(), 150, ratio, 0.1, 100);
               gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
-
           }else{
               var pMatrixUniform = gl.getUniformLocation(gl.program, "u_pMatrix");
               var pMatrix = mat4.ortho(mat4.create(), -ratio, ratio, -1.0, 1.0, 5.0, -1.0);
               gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
           }
-
-          document.addEventListener('wheel', function (event) {
-              z = event.wheelDelta > 0 ? z + 1 : z - 1;
-              VMATRIX();
-          });
-
           VMATRIX();
         }
+
 
         function VMATRIX() {
           var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
@@ -208,6 +203,7 @@
             }
             return shader;
         }
+
     </script>
 
 </head>
